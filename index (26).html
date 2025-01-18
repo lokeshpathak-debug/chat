@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>World Chat</title>
+  <style>
+    #chat-app {
+      max-width: 600px;
+      margin: auto;
+      padding: 20px;
+      border: 1px solid #ddd;
+      background-color: #f9f9f9;
+      border-radius: 5px;
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+    #chat-messages {
+      height: 300px;
+      overflow-y: auto;
+      border: 1px solid #ddd;
+      margin-bottom: 10px;
+      padding: 10px;
+      background-color: #fff;
+      border-radius: 5px;
+    }
+    #username, #chat-input {
+      width: calc(100% - 100px);
+      padding: 10px;
+      margin: 5px 0;
+    }
+    #send-btn {
+      width: 90px;
+      padding: 10px;
+      margin-top: 5px;
+      border: none;
+      background-color: #4CAF50;
+      color: white;
+      cursor: pointer;
+      border-radius: 5px;
+    }
+    #send-btn:hover {
+      background-color: #45a049;
+    }
+  </style>
+</head>
+<body>
+  <div id="chat-app">
+    <h2>World Chat</h2>
+    <div id="chat-messages"></div>
+    <input id="username" type="text" placeholder="Enter your name..." />
+    <input id="chat-input" type="text" placeholder="Type your message..." />
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script type="module">
+    // Import Firebase modules
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-app.js";
+    import { getFirestore, collection, addDoc, query, orderBy, onSnapshot } from "https://www.gstatic.com/firebasejs/11.2.0/firebase-firestore.js";
+
+    // Firebase configuration
+    const firebaseConfig = {
+      apiKey: "AIzaSyD78i8-syX3nf1ZT_Si0phounwE9CjoWEk",
+      authDomain: "world-3603e.firebaseapp.com",
+      projectId: "world-3603e",
+      storageBucket: "world-3603e.appspot.com",
+      messagingSenderId: "657413993532",
+      appId: "1:657413993532:web:aa7a5c436e1ef4cd91bf39",
+      measurementId: "G-74L38CVKJ0"
+    };
+
+    // Initialize Firebase
+    const app = initializeApp(firebaseConfig);
+    const db = getFirestore(app);
+
+    // Firestore collection reference
+    const messagesRef = collection(db, "messages");
+
+    // Load messages in real-time
+    function loadMessages() {
+      const q = query(messagesRef, orderBy("timestamp"));
+      onSnapshot(q, (snapshot) => {
+        const chatMessages = document.getElementById("chat-messages");
+        chatMessages.innerHTML = ""; // Clear previous messages
+        snapshot.forEach((doc) => {
+          const message = doc.data();
+          const messageDiv = document.createElement("div");
+          messageDiv.innerHTML = `<b>${message.username}:</b> ${message.text}`;
+          chatMessages.appendChild(messageDiv);
+        });
+        chatMessages.scrollTop = chatMessages.scrollHeight; // Auto-scroll
+      });
+    }
+
+    // Send a new message
+    async function sendMessage(username, text) {
+      if (text.trim() !== "") {
+        await addDoc(messagesRef, {
+          username: username || "Anonymous",
+          text: text,
+          timestamp: new Date(),
+        });
+      }
+    }
+
+    // DOM interaction
+    document.addEventListener("DOMContentLoaded", () => {
+      loadMessages();
+
+      const sendButton = document.getElementById("send-btn");
+      const chatInput = document.getElementById("chat-input");
+      const usernameInput = document.getElementById("username");
+
+      sendButton.addEventListener("click", () => {
+        const username = usernameInput.value;
+        const text = chatInput.value;
+        sendMessage(username, text);
+        chatInput.value = ""; // Clear the input box
+      });
+    });
+  </script>
+</body>
+</html>
